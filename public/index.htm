@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node - JWT</title>
+</head>
+<body>
+    <div style="text-align: center">
+        <h1>Welcome to JWT with Node-Express Web Server</h1>
+    </div><br>
+
+    <div id="users" style="width: 95%; margin: 0 auto"></div><br><br>
+
+    <div>
+        <button id="login" onclick="login()">Login</button>
+    </div><br>
+    <div>
+        <button onclick="getUsers()">Get Users</button>
+    </div>
+
+    <script>
+        const users = document.querySelector('#users')
+        const loginButton = document.querySelector('button#login')
+
+        const login = () => {
+            console.log('clicked on login')
+            displayForm()
+            loginButton.style.visibility = 'hidden'
+        }
+
+        const logout = () => {
+            console.log('clicked on logout')
+            localStorage.removeItem('token')
+            loginButton.innerText = 'Login'
+            loginButton.setAttribute('onclick', 'login()')
+            users.innerHTML = ''
+        }
+
+        const sendLogin = async() => {
+            const url = 'http://localhost:3000/login'
+            const username = document.querySelector('#username').value
+            const password = document.querySelector('#password').value
+
+            const context = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({username, password})
+            }
+            const result = await(await fetch(url, context)).json()
+            const {message, token} = result
+            if(message){
+                document.querySelector('#err-msg').innerHTML = message
+                setTimeout(()=>{
+                    document.querySelector('#err-msg').innerHTML = ''
+                }, 1500)
+            }else{
+                localStorage.setItem('token', token)
+                document.querySelector('#err-msg').innerHTML = "Login was successful"
+                setTimeout(()=>{
+                    users.innerHTML = ''
+                    loginButton.innerText = 'Logout'
+                    loginButton.style.visibility = 'visible'
+                    loginButton.setAttribute('onclick', 'logout()')
+                }, 1000)
+            }
+        }
+
+        const getUsers = async() => {
+            const url = 'http://localhost:3000/users'
+            const token = localStorage.getItem('token') ? localStorage.getItem('token') : ''
+            const result = await (await fetch(url, {headers: {'Authorization': 'Bearer ' + token}})).json()
+            const {message, data} = result
+
+            if(message){
+                users.innerHTML = message
+                loginButton.style.visibility = 'visible'
+            }else{
+                let string = ''
+                data.forEach(({name}, index) =>{
+                    string += `
+                        <div>${name}</div><br />
+                    `
+                })
+                users.innerHTML = string
+            }
+        }
+
+        const displayForm = () => {
+            users.innerHTML = `
+                <div>
+                    <div>
+                        <label>Username</label>
+                        <div><input type="text" id="username"></div>
+                    </div><br />
+
+                    <div>
+                        <label>Password</label>
+                        <div><input type="password" id="password"></div>
+                    </div><br />
+
+                    <div id="err-msg"></div><br />
+                    <div>
+                        <button onclick="sendLogin()">User login</button>
+                    </div>
+                </div>
+            `
+        }
+    </script>
+</body>
+</html>
