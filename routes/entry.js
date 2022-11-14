@@ -11,8 +11,9 @@ const db = [
 router.route('/')
 .get((req, res) => {
     // res.json({message: 'Node server running successfully'})
-    // res.sendFile(path.join(__dirname, 'public', 'index.htm'))
-    res.sendFile('index.htm')
+    const file_path = path.parse(__dirname).dir
+    res.sendFile(path.join(file_path, 'public', 'index.htm'))
+    // res.sendFile('index.htm')
 })
 
 router.post('/login',(req, res) => {
